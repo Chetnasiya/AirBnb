@@ -1,0 +1,162 @@
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
+    font-family: "Plus Jakarta Sans", sans-serif !important;
+}
+.container{
+    flex:1;
+}
+.navbar {
+    height: 5rem;
+    background-color: white;
+}
+
+.fa-compass {
+    color: #fe424d;
+    font-size: 2rem;
+}
+
+.nav-link {
+    color: #222222 !important;
+}
+
+.f-info-links a {
+    /* text-decoration: none; no need */
+    color: #222222;
+
+}
+
+.f-info-links a:hover {
+    text-decoration: underline;
+}
+
+.f-info-links,
+.f-info-socials,
+.f-info-brand {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.f-info-socials i {
+    font-size: 1.2rem;
+    margin-right: 1rem;
+}
+
+.f-info {
+    text-align: center;
+    height: 8rem;
+    background-color: #ebebeb;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+
+}
+/* Cards .......................................................................*/
+.listing-card{
+    border: none !important;
+    margin-bottom: 2rem;
+    /* border: #222222 !important; */
+}
+.card-img-top{
+    border-radius: 1rem !important;
+    width: 100% !important;
+    object-fit: cover !important;
+}
+.card-body{
+    padding: 0 !important;
+    color: #222222 !important;
+}
+.card-text{
+    font-weight: 400 !important;
+}
+
+.listing-link{
+    text-decoration: none !important;
+}
+
+/* card effect................................................................. */
+
+.card-img-overlay{
+    opacity: 0;
+}
+.card-img-overlay:hover{
+    opacity: 0.2;
+    background-color:white ;
+}
+
+/* new page.................................................................*/
+.add-btn{
+    background-color: #fe424d !important;
+    border: none !important;
+}
+
+/* edit page.................................................................*/
+.edit-btn{
+    background-color: #fe424d !important;
+    border: none !important;
+}
+
+/* show page.................................................................*/
+.show-img{
+    height: 30vh;
+}
+/* .btns{
+    display: flex;
+    flex-direction: row;
+    margin-left: 20%;
+} */
+/* switch box */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+/* hide default checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* background slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 24px;
+}
+
+/* circle inside switch */
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+/* ON state */
+input:checked + .slider {
+  background-color: #6cb3ff;
+}
+
+/* move circle when ON */
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
