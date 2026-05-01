@@ -270,6 +270,8 @@ const userRouter = require("./routes/user.js");
 
 // DB connections
 const dbUrl = process.env.ATLASDB_URL;
+// console.log("ENV DB URL:", process.env.ATLASDB_URL);
+
 main()
     .then(() => {
         console.log("Connected to DB");
