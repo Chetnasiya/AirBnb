@@ -23,20 +23,19 @@ module.exports.showListing = async (req, res) => {
         req.flash("error", "Listing you requested for does not exist");
         return res.redirect("/listings");
     }
-    // res.render("listings/show", { listing });
+    const coords = (listing.coordinates && listing.coordinates.lat != null && listing.coordinates.lng != null)
+        ? [listing.coordinates.lat, listing.coordinates.lng]
+        : [28.6139, 77.2090];
     res.render("listings/show", {
         listing,
-        coordinates: [
-            listing.coordinates.lat,
-            listing.coordinates.lng
-        ]
+        coordinates: coords
     });
 
 }
 
 module.exports.createListing = async (req, res, next) => {
-    let url = req.file.path;
-    let filename = req.file.filename;
+    let url = req.file ? req.file.path : "https://images.unsplash.com/photo-1501785888041-af3ef285b470";
+    let filename = req.file ? req.file.filename : "listingimage";
 
     const newListing = new Listing(req.body.listing);
 
@@ -46,40 +45,34 @@ module.exports.createListing = async (req, res, next) => {
     //convert location → coordinates
     let location = req.body.listing.location;
 
-    // delay to avoid blocking
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    let response = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(location)}&format=json`,
-        {
-            headers: {
-                "User-Agent": "WanderlustApp/1.0 (chetnasiya80@gmail.com)",
-                "Accept": "application/json"
+    try {
+        let response = await fetch(
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(location)}&format=json`,
+            {
+                headers: {
+                    "User-Agent": "WanderlustApp/1.0 (chetnasiya80@gmail.com)",
+                    "Accept": "application/json"
+                }
             }
+        );
+
+        if (response.ok) {
+            let data = await response.json();
+            if (data && data.length > 0) {
+                newListing.coordinates = {
+                    lat: parseFloat(data[0].lat),
+                    lng: parseFloat(data[0].lon)
+                };
+            } else {
+                newListing.coordinates = { lat: 28.6139, lng: 77.2090 };
+            }
+        } else {
+            newListing.coordinates = { lat: 28.6139, lng: 77.2090 };
         }
-    );
-
-    console.log("Status:", response.status);
-
-    if (!response.ok) {
-        req.flash("error", "Location fetch failed");
-        return res.redirect("/listings/new");
+    } catch (err) {
+        console.log("Geocoding error:", err.message);
+        newListing.coordinates = { lat: 28.6139, lng: 77.2090 };
     }
-
-    let data = await response.json();
-
-    // safety check
-    // console.log(data);
-    if (!data || data.length === 0) {
-        req.flash("error", "Invalid location");
-        return res.redirect("/listings/new");
-    }
-
-    newListing.coordinates = {
-        lat: parseFloat(data[0].lat),
-        lng: parseFloat(data[0].lon)
-    };
-    // console.log(typeof fetch);  
 
     await newListing.save();
     req.flash("success", "New listing created!");
@@ -89,9 +82,15 @@ module.exports.createListing = async (req, res, next) => {
 module.exports.renderEditForm = async (req, res) => {
     const { id } = req.params;
     const listing = await Listing.findById(id);
+    if (!listing) {
+        req.flash("error", "Listing not found!");
+        return res.redirect("/listings");
+    }
 
-    let originalImageUrl = listing.image.url;
-    originalImageUrl = originalImageUrl.replace("/upload", "/upload/w_250");
+    let originalImageUrl = (listing.image && listing.image.url) ? listing.image.url : "";
+    if (originalImageUrl) {
+        originalImageUrl = originalImageUrl.replace("/upload", "/upload/w_250");
+    }
 
     res.render("listings/edit", { listing, originalImageUrl });
 }
@@ -100,31 +99,36 @@ module.exports.updateListing = async (req, res) => {
     let { id } = req.params;
 
     let listing = await Listing.findByIdAndUpdate(id, { ...req.body.listing },{ new: true });
+    if (!listing) {
+        req.flash("error", "Listing not found!");
+        return res.redirect("/listings");
+    }
 
-    // 🟢 NEW CODE: update coordinates when location changes
     let location = req.body.listing.location;
 
-    // delay to avoid blocking
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    if (location) {
+        try {
+            let response = await fetch(
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(location)}&format=json`,
+                {
+                    headers: {
+                        "User-Agent": "WanderlustApp/1.0 (chetnasiya80@gmail.com)",
+                        "Accept": "application/json"
+                    }
+                }
+            );
 
-    let response = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(location)}&format=json`,
-        {
-            headers: {
-                "User-Agent": "WanderlustApp/1.0 (chetnasiya80@gmail.com)",
-                "Accept": "application/json"
+            if (response.ok) {
+                let data = await response.json();
+                if (data && data.length > 0) {
+                    listing.coordinates = {
+                        lat: parseFloat(data[0].lat),
+                        lng: parseFloat(data[0].lon)
+                    };
+                }
             }
-        }
-    );
-
-    if (response.ok) {
-        let data = await response.json();
-
-        if (data.length > 0) {
-            listing.coordinates = {
-                lat: parseFloat(data[0].lat),
-                lng: parseFloat(data[0].lon)
-            };
+        } catch (err) {
+            console.log("Geocoding update error:", err.message);
         }
     }
 

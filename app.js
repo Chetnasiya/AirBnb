@@ -11,7 +11,7 @@ const ExpressError = require('./utils/ExpressError.js');
 const listingsRouter = require("./routes/listing.js");
 const reviewsRouter = require("./routes/review.js");
 const session = require('express-session');
-const MongoStore = require("connect-mongo").default;
+const MongoStore = require("connect-mongo").default || require("connect-mongo");
 const flash = require('connect-flash');
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
@@ -19,7 +19,7 @@ const User = require("./models/user.js");
 const userRouter = require("./routes/user.js");
 
 // DB connections
-const dbUrl = process.env.ATLASDB_URL;
+const dbUrl = process.env.ATLASDB_URL || "mongodb://127.0.0.1:27017/wanderlust";
 // console.log("ENV DB URL:", process.env.ATLASDB_URL);
 
 main()
@@ -42,10 +42,12 @@ app.engine("ejs", ejsMate);
 app.use(express.static(path.join(__dirname, "/public")));
 
 
+const secret = process.env.SECRET || "mysupersecret";
+
 const store = MongoStore.create({
     mongoUrl: dbUrl,
     crypto: {
-        secret: process.env.SECRET,
+        secret: secret,
     },
     touchAfter: 24 * 3600,
 });
@@ -56,7 +58,7 @@ store.on("error", (err) => {
 
 const sessionOptions = {
     store,
-    secret: process.env.SECRET,
+    secret: secret,
     resave: false,
     saveUninitialized: true,
     cookie: {
@@ -108,11 +110,12 @@ app.use((req, res, next) => {
 // middlewares - error
 app.use((err, req, res, next) => {
     let { statusCode = 500, message = "Something went wrong!" } = err;
-    res.status(statusCode).render("error.ejs", { err });
+    res.status(statusCode).render("error.ejs", { err: { statusCode, message } });
 })
 
 // server connected to port - server is live
-app.listen(8080, () => {
-    console.log("Server is listenning to port 8080");
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+    console.log(`Server is listening to port ${PORT}`);
 })
 
